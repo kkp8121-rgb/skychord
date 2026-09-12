@@ -1,6 +1,6 @@
 export const CHARACTERS = [
   {
-    id: 'mira', name: '미라', role: '공격·템포', bio: '첫 신호를 두고 떠나지 못하는 전직 철도 지휘자입니다.', color: '#ef766b', portrait: 'assets/mira.png', voice: 'ember', baseHp: 120,
+    id: 'mira', name: '미라', role: '공격·템포', bio: '첫 신호를 두고 떠나지 못하는 전직 철도 지휘자입니다.', color: '#ef766b', portrait: 'assets/mira.webp', voice: 'ember', baseHp: 120,
     skills: [
       { id: 'baton-strike', name: '박자 베기', description: '단일 적에게 강한 불꽃 피해', kind: 'attack', power: 23, note: 'ember' },
       { id: 'rising-beat', name: '고조 박자', description: '모든 적에게 안정적인 피해', kind: 'attackAll', power: 13, note: 'star' },
@@ -8,7 +8,7 @@ export const CHARACTERS = [
     ]
   },
   {
-    id: 'sena', name: '세나', role: '브레이크·수호', bio: '부서진 노선 속 패턴을 듣는 관측소 음악가입니다.', color: '#67c9c4', portrait: 'assets/sena.png', voice: 'tide', baseHp: 108,
+    id: 'sena', name: '세나', role: '브레이크·수호', bio: '부서진 노선 속 패턴을 듣는 관측소 음악가입니다.', color: '#67c9c4', portrait: 'assets/sena.webp', voice: 'tide', baseHp: 108,
     skills: [
       { id: 'string-shot', name: '현의 관통', description: '단일 적에게 파도 피해 · 약점 피해 증가', kind: 'attack', power: 19, note: 'tide' },
       { id: 'ward-string', name: '결계현', description: '이번 적 행동 동안 아군 전체에 방패 28', kind: 'shield', power: 28, note: 'ember' },
@@ -16,7 +16,7 @@ export const CHARACTERS = [
     ]
   },
   {
-    id: 'noa', name: '노아', role: '회복·공명', bio: '불완전한 조각을 노래로 엮는 기록관입니다.', color: '#a98bdd', portrait: 'assets/noa.png', voice: 'star', baseHp: 100,
+    id: 'noa', name: '노아', role: '회복·공명', bio: '불완전한 조각을 노래로 엮는 기록관입니다.', color: '#a98bdd', portrait: 'assets/noa.webp', voice: 'star', baseHp: 100,
     skills: [
       { id: 'key-burst', name: '건반 파동', description: '단일 적에게 별빛 피해', kind: 'attack', power: 16, note: 'star' },
       { id: 'restoring-chord', name: '회복 화음', description: '체력 비율이 가장 낮은 생존 동료를 회복', kind: 'heal', power: 30, note: 'tide' },
