@@ -17,7 +17,7 @@ Root owns integration and verification. Three Luna executors own independent sim
 
 ## Usage limit
 
-User requested continued diverse production until weekly allowance remaining reaches 30%. Read the active session token_count rate_limits event, selecting the 10080-minute window. Initial observed used=6%, remaining=94%. Do not substitute token count or five-hour allowance for weekly remaining.
+User requested continued diverse production until weekly allowance remaining reaches 30%. Read the active session token_count rate_limits event for limit_id `codex`, selecting the 10080-minute window. Initial observed used=6%, remaining=94%; latest Codex observation at 2026-09-12 19:52 UTC was used=10%, remaining=90%. The separate `codex_bengalfox`/Spark allowance is not the Codex weekly balance. Do not substitute token count, a different model allowance, or the five-hour allowance for weekly remaining.
 
 ## Release
 

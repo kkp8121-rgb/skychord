@@ -9,7 +9,11 @@
     "serve": "node tools/server.cjs",
     "test": "node --test tests/*.test.mjs",
     "test:browser": "node tests/browser.cjs",
-    "test:all": "npm run build && npm test && npm run test:browser",
+    "test:interaction": "node tests/interaction.cjs",
+    "test:battle": "node tests/battle-flow.cjs",
+    "test:campaign": "node tests/campaign-browser.cjs",
+    "test:performance": "node tests/performance.cjs",
+    "test:all": "npm run build && npm test && npm run test:browser && npm run test:interaction && npm run test:battle && npm run test:campaign",
     "pack": "node tools/pack.cjs"
   },
   "devDependencies": {

@@ -12,7 +12,7 @@ Complete scope: four sizable explorable floating districts, three distinctive ad
 
 Art: warm cel-shaded diorama, ivory/ink/gold interface, coral/teal/violet hero palette, long aerial railways and cloud ocean. Character proportions stylized/chibi but readable clothing, hair and instruments; no capsule-only characters. Portraits are actual ImageGen assets. Scenes must contain architecture, paths, trees/machinery, distant islands, animated details and visible destinations. Keep navigation readable.
 
-Characters: Mira (adult woman, coral bob, ivory conductor coat, blue scarf, baton/sabre; attack/tempo), Sena (adult woman, silver-teal long hair, navy/cyan coat, mechanical bow/strings; break/ward), Noa (adult man, violet messy hair, cream cloak, round glasses, portable keyboard grimoire; heal/resonance). Voices: ember/tide/star. Portraits assets/mira.png, sena.png, noa.png. Title art assets/key-art.png. UI must work before art arrives; root produces and wires final art.
+Characters: Mira (adult woman, coral bob, ivory conductor coat, blue scarf, baton/sabre; attack/tempo), Sena (adult woman, silver-teal long hair, navy/cyan coat, mechanical bow/strings; break/ward), Noa (adult man, violet messy hair, cream cloak, round glasses, portable keyboard grimoire; heal/resonance). Voices: ember/tide/star. Portraits assets/mira.webp, sena.webp, noa.webp. Title art assets/key-art.webp. UI must work before art arrives; root produces and wires final art.
 
 Controls exploration: WASD/arrows move relative to camera, Shift sprint, Q/E rotate camera, F/Enter interact, Tab journal/party, Escape pause, M audio. Battle: Q/E choose available hero, 1/2/3 select skill, Tab choose living enemy target, Space/Enter execute, F use shared encore when ready. Click equivalents and touch joystick/actions where practical. Explicit on-screen hints.
 
@@ -50,6 +50,8 @@ QUESTS: `{id,name,description,region,requires:string[],reward:{shards,xp}}`; col
 `encore(battle)` => `{ok,message,events}` spend 100 resonance for cinematic all-party attack + team heal, works if any hero alive, no normal turn cost.
 `legalActions(battle)` => array `{hero,skill,target}` for tests/AI; no winning shortcut.
 Events use `{type:'hit'|'heal'|'shield'|'chord'|'enemy'|'victory'|'defeat'|'encore'|'round',side?:'hero'|'enemy',index?:number,source?:number,amount?:number,text?:string,note?:string}`. Keep event arrays returned per action; clear old `battle.events` on new action, cap log. result 'win'/'lose' and phase 'won'/'lost' when done. Handle all dead/effect ordering safely.
+
+Event direction: for `hit`, `side` identifies the attacker side, `source` its index and `index` the target on the opposite side. For `heal`/`shield`, `side` and `index` identify the beneficiary. Position impact particles at the target, and animate the attacker separately.
 
 ### scene.js
 Export `class GameScene`:
