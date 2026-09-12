@@ -6,3 +6,4 @@ User-facing game copy: Korean, with SKYCHORD as the title. All characters are ad
 Headless browser verification only. Never launch a visible browser.
 Stage explicit paths only. Root owns commits; git push requires explicit approval for that push.
 Read docs/CONTRACT.md before implementation. Respect worker ownership. Never revert another worker's edits.
+ImageGen results: render with generatedImage(result); print only output_hint or paths. Never stringify or log image_url/base64 payloads.
