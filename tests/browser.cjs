@@ -22,6 +22,7 @@ async function main() {
       page.on('requestfailed',r=>failed.push([r.failure()?.errorText,r.url()]));
       page.on('request',r=>{if(r.url().startsWith('http')&&!r.url().startsWith(new URL(urls[i]).origin))external.push(r.url());});
       await page.addInitScript(()=>{
+        Element.prototype.requestPointerLock=()=>Promise.reject(new Error('Native pointer lock disabled in automation'));
         const Native=window.AudioContext||window.webkitAudioContext;
         window.__audioEvidence={contexts:[],oscillators:0};
         if(Native)window.AudioContext=class extends Native{constructor(...args){super(...args);window.__audioEvidence.contexts.push(this);this.__meter=this.createAnalyser();this.__meter.fftSize=512;const createGain=this.createGain.bind(this);this.createGain=()=>{const gain=createGain(),connect=gain.connect.bind(gain);gain.connect=(destination,...args)=>{if(destination===this.destination)connect(this.__meter);return connect(destination,...args);};return gain;};const create=this.createOscillator.bind(this);this.createOscillator=(...args)=>{const o=create(...args),start=o.start.bind(o);o.start=(...args)=>{window.__audioEvidence.oscillators++;return start(...args)};return o;};}};

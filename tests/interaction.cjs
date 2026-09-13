@@ -9,7 +9,8 @@ async function main(){
  const browser=await chromium.launch({headless:true});const report=[];
  try{
   for(const settings of [{name:'desktop',viewport:{width:1440,height:900}},{name:'portrait',viewport:{width:390,height:844},hasTouch:true,isMobile:true,deviceScaleFactor:2,reducedMotion:'reduce'},{name:'landscape',viewport:{width:844,height:390},hasTouch:true,isMobile:true}]){
-   const {name,...options}=settings;const context=await browser.newContext(options),page=await context.newPage(),errors=[];
+    const {name,...options}=settings;const context=await browser.newContext(options),page=await context.newPage(),errors=[];
+    await context.addInitScript(() => { Element.prototype.requestPointerLock = () => Promise.reject(new Error('Native pointer lock disabled in automation')); });
    page.on('pageerror',e=>errors.push(e.message));
    await page.goto(`http://127.0.0.1:${server.address().port}/skychord/`);
    await page.waitForFunction(()=>window.__skychord);

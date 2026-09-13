@@ -47,6 +47,10 @@ function boot() {
   let pendingBattleResolution = false;
   let battleEpoch = 0;
   let held = Object.create(null);
+  const heldSources = {
+    up: new Set(), down: new Set(), left: new Set(), right: new Set(), sprint: new Set(),
+    rotateLeft: new Set(), rotateRight: new Set()
+  };
   let toast = '';
   let toastUntil = 0;
   let previous = performance.now();
@@ -220,7 +224,8 @@ function boot() {
   }
   function retryBattle() { if (!encounterId) return; battleEpoch++; pendingBattleResolution = false; actionLockUntil = 0; battle = createBattle(campaign, encounterId); selectedHero = 0; selectedSkill = 0; selectedTarget = 0; setScreen('battle'); }
   function resumeFromVictory() { setScreen('explore'); saveCampaign(); }
-  function clearHeld() { held = Object.create(null); document.querySelectorAll('[data-hold]').forEach((button) => button.classList.remove('held')); }
+  function clearHeld() { Object.values(heldSources).forEach((sources) => sources.clear()); held = Object.create(null); document.querySelectorAll('[data-hold]').forEach((button) => button.classList.remove('held')); }
+  function setHeld(action, source, active) { const sources = heldSources[action]; if (!sources) return; if (active) sources.add(source); else sources.delete(source); if (sources.size) held[action] = true; else delete held[action]; }
   function pause() { if (screen === 'title' || screen === 'dialogue' || screen === 'ending') return; beforePause = screen; clearHeld(); setScreen('pause'); }
   function resume() { const next = beforePause === 'pause' ? 'explore' : beforePause; setScreen(next); if (pendingBattleResolution && next === 'battle') resolveBattleAction(); }
   function openJournal(tab = 'map') { if (battle) { notify('전투 중에는 기록을 열 수 없습니다.'); return; } if (screen !== 'pause') beforePause = screen; clearHeld(); ui.journal(viewCampaign(), CHARACTERS, questProgress(campaign), tab); screen = 'journal'; if (scene) scene.setMode('explore'); audio.setMode('paused', campaign.region || 0); }
@@ -238,7 +243,7 @@ function boot() {
     if (screen === 'battle') {
       if (key === 'q' && !event.repeat) selectHero(-1);
       else if (key === 'e' && !event.repeat) selectHero(1);
-      else if (key === '1' || key === '2' || key === '3') chooseSkill(Number(key) - 1);
+      else if (!event.repeat && (key === '1' || key === '2' || key === '3')) chooseSkill(Number(key) - 1);
       else if (key === 'tab' && !event.repeat) { selectTarget(1); event.preventDefault(); }
       else if ((key === ' ' || key === 'enter') && !event.repeat) { executeBattle(false); event.preventDefault(); }
       else if (key === 'f' && !event.repeat) executeBattle(true);
@@ -247,19 +252,19 @@ function boot() {
     if (screen !== 'explore') return;
     if (key === 'tab' && !event.repeat) { openJournal(); event.preventDefault(); return; }
     if ((key === 'f' || key === 'enter') && !event.repeat) { interactNearby(); event.preventDefault(); return; }
-    if (key === 'shift') { held.sprint = true; event.preventDefault(); return; }
+    if (key === 'shift') { setHeld('sprint', 'key:shift', true); event.preventDefault(); return; }
     const movement = { w: 'up', arrowup: 'up', s: 'down', arrowdown: 'down', a: 'left', arrowleft: 'left', d: 'right', arrowright: 'right' };
-    if (movement[key]) { held[movement[key]] = true; event.preventDefault(); }
-    if (key === 'q') { held.rotateLeft = true; event.preventDefault(); }
-    if (key === 'e') { held.rotateRight = true; event.preventDefault(); }
+    if (movement[key]) { setHeld(movement[key], 'key:' + key, true); event.preventDefault(); }
+    if (key === 'q') { setHeld('rotateLeft', 'key:q', true); event.preventDefault(); }
+    if (key === 'e') { setHeld('rotateRight', 'key:e', true); event.preventDefault(); }
   }
   function keyup(event) {
     const key = event.key.toLowerCase();
     const movement = { w: 'up', arrowup: 'up', s: 'down', arrowdown: 'down', a: 'left', arrowleft: 'left', d: 'right', arrowright: 'right' };
-    if (key === 'shift') delete held.sprint;
-    if (movement[key]) delete held[movement[key]];
-    if (key === 'q') delete held.rotateLeft;
-    if (key === 'e') delete held.rotateRight;
+    if (key === 'shift') setHeld('sprint', 'key:shift', false);
+    if (movement[key]) setHeld(movement[key], 'key:' + key, false);
+    if (key === 'q') setHeld('rotateLeft', 'key:q', false);
+    if (key === 'e') setHeld('rotateRight', 'key:e', false);
   }
 
   function bind() {
@@ -277,8 +282,9 @@ function boot() {
     document.addEventListener('visibilitychange', () => { if (document.hidden) { clearHeld(); if (screen === 'explore' || screen === 'battle') pause(); } });
     document.querySelectorAll('[data-hold]').forEach((button) => {
       const action = button.dataset.hold;
-      button.addEventListener('pointerdown', (event) => { event.preventDefault(); unlockAudio(); held[action] = true; button.classList.add('held'); try { button.setPointerCapture(event.pointerId); } catch (_) {} });
-      const release = (event) => { event.preventDefault(); delete held[action]; button.classList.remove('held'); };
+      const pointers = new Set();
+      button.addEventListener('pointerdown', (event) => { event.preventDefault(); unlockAudio(); const source = 'pointer:' + event.pointerId; pointers.add(source); setHeld(action, source, true); button.classList.add('held'); try { button.setPointerCapture(event.pointerId); } catch (_) {} });
+      const release = (event) => { event.preventDefault(); const source = 'pointer:' + event.pointerId; pointers.delete(source); setHeld(action, source, false); if (!pointers.size) button.classList.remove('held'); };
       button.addEventListener('pointerup', release); button.addEventListener('pointercancel', release); button.addEventListener('lostpointercapture', release);
     });
   }

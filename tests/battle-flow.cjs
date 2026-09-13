@@ -36,6 +36,7 @@ async function main() {
     page.on('requestfailed', request => failed.push([request.failure()?.errorText || 'request failed', request.url()]));
     page.on('request', request => { if (request.url().startsWith('http') && !request.url().startsWith(new URL(url).origin)) external.push(request.url()); });
     await page.addInitScript(value => {
+      Element.prototype.requestPointerLock = () => Promise.reject(new Error('Native pointer lock disabled in automation'));
       if (!sessionStorage.getItem('__skychord_fixture_loaded')) {
         localStorage.setItem('skychord.save.v1', value);
         sessionStorage.setItem('__skychord_fixture_loaded', '1');
@@ -61,8 +62,17 @@ async function main() {
     await page.locator(`[data-action="battle-hero"][data-hero="${hero}"]`).click();
     await page.locator(`[data-action="battle-skill"][data-skill="${skill}"]`).click();
     const targetButton = page.locator(`[data-action="battle-target"][data-target="${target}"]`);
-    if (await targetButton.count() && await targetButton.isEnabled()) await targetButton.click();
-    await page.locator('[data-action="execute"]').click();
+    if (await targetButton.count() && await targetButton.isEnabled()) {
+      const targetName = await targetButton.locator('span').textContent();
+      await targetButton.click();
+      assert.ok((await page.locator('#enemy-intent').textContent()).includes(targetName), 'enemy intent follows the selected target');
+    }
+    const heroName = await page.locator(`[data-action="battle-hero"][data-hero="${hero}"] .hero-copy b`).textContent();
+    const skillName = await page.locator(`[data-action="battle-skill"][data-skill="${skill}"] b`).textContent();
+    const execute = page.locator('[data-action="execute"]');
+    assert.ok((await execute.textContent()).includes(heroName), 'execute preview names the selected hero');
+    assert.ok((await execute.textContent()).includes(skillName.replace(/^\s*\d+\s*[·.]\s*/, '').trim()), 'execute preview names the selected skill');
+    await execute.click();
     if (wait) await page.waitForTimeout(wait);
   }
   async function nextCommand(page, wait = 460) {
@@ -71,6 +81,26 @@ async function main() {
     const target = battle.enemies.findIndex(unit => unit.hp > 0);
     assert.ok(hero >= 0 && target >= 0, 'battle has a living legal actor and target');
     await command(page, hero, 0, target, wait);
+  }
+  async function mobileLayout(page) {
+    const execute = page.locator('#execute-button');
+    await execute.scrollIntoViewIfNeeded();
+    return page.evaluate(() => {
+      const execute = document.querySelector('#execute-button');
+      const rect = execute.getBoundingClientRect();
+      const x = Math.max(1, Math.min(innerWidth - 1, rect.left + rect.width / 2));
+      const y = Math.max(1, Math.min(innerHeight - 1, rect.top + rect.height / 2));
+      const hit = document.elementFromPoint(x, y);
+      const legend = document.querySelector('.battle-controls');
+      return {
+        width: innerWidth,
+        height: innerHeight,
+        scrollWidth: document.documentElement.scrollWidth,
+        execute: { left: rect.left, right: rect.right, top: rect.top, bottom: rect.bottom, width: rect.width, height: rect.height, hit: hit === execute || execute.contains(hit), text: execute.textContent.trim() },
+        keyboardLegend: legend ? getComputedStyle(legend).display : 'missing',
+        guide: !!document.querySelector('#battle-guide summary')
+      };
+    });
   }
   function record(pageHandle, name, extra = {}) {
     report.scenarios.push({ name, ...extra });
@@ -147,13 +177,17 @@ async function main() {
     console.log('scenario mobile begin');
     const portrait = await openPage(fixture({ x: 5, z: 4 }), { width: 390, height: 844 }, true);
     await enterBattle(portrait.page);
-    const portraitLayout = await portrait.page.evaluate(() => ({ width: innerWidth, scrollWidth: document.documentElement.scrollWidth, touch: getComputedStyle(document.querySelector('.touch-bar')).display, guide: !!document.querySelector('#battle-guide summary'), boxes: [...document.querySelectorAll('#battle-enemies button, #battle-heroes button, #battle-skills button, #execute-button')].slice(0, 8).map(node => { const b = node.getBoundingClientRect(); return { left: b.left, right: b.right, top: b.top, bottom: b.bottom, visible: b.width > 0 && b.height > 0 }; }) }));
-    assert.ok(portraitLayout.scrollWidth <= portraitLayout.width + 1); assert.equal(portraitLayout.touch, 'none'); assert.equal(portraitLayout.guide, true); assert.ok(portraitLayout.boxes.every(box => box.visible && box.left >= 0 && box.right <= portraitLayout.width));
-    await portrait.page.locator('#battle-guide summary').click();
+    const portraitLayout = await mobileLayout(portrait.page);
+    assert.ok(portraitLayout.scrollWidth <= portraitLayout.width + 1); assert.equal(portraitLayout.keyboardLegend, 'none'); assert.equal(portraitLayout.guide, true);
+    assert.ok(portraitLayout.execute.width >= 44 && portraitLayout.execute.height >= 44 && portraitLayout.execute.left >= 0 && portraitLayout.execute.right <= portraitLayout.width && portraitLayout.execute.top >= 0 && portraitLayout.execute.bottom <= portraitLayout.height && portraitLayout.execute.hit, 'portrait execute preview is reachable and unobscured');
+    assert.ok(portraitLayout.execute.text.length > 8, 'portrait execute preview names the action');
     await portrait.page.screenshot({ path: path.join(artifacts, 'battle-flow-mobile-portrait.png') });
+    await portrait.page.locator('#battle-guide summary').click();
     await portrait.page.setViewportSize({ width: 844, height: 390 });
-    const landscapeLayout = await portrait.page.evaluate(() => ({ width: innerWidth, scrollWidth: document.documentElement.scrollWidth, touch: getComputedStyle(document.querySelector('.touch-bar')).display, boxes: [...document.querySelectorAll('#battle-enemies button, #battle-heroes button, #battle-skills button, #execute-button')].slice(0, 8).map(node => { const b = node.getBoundingClientRect(); return { left: b.left, right: b.right, top: b.top, bottom: b.bottom, visible: b.width > 0 && b.height > 0 }; }) }));
-    assert.ok(landscapeLayout.scrollWidth <= landscapeLayout.width + 1); assert.equal(landscapeLayout.touch, 'none'); assert.ok(landscapeLayout.boxes.every(box => box.visible && box.left >= 0 && box.right <= landscapeLayout.width));
+    const landscapeLayout = await mobileLayout(portrait.page);
+    assert.ok(landscapeLayout.scrollWidth <= landscapeLayout.width + 1); assert.equal(landscapeLayout.keyboardLegend, 'none');
+    assert.ok(landscapeLayout.execute.width >= 44 && landscapeLayout.execute.height >= 44 && landscapeLayout.execute.left >= 0 && landscapeLayout.execute.right <= landscapeLayout.width && landscapeLayout.execute.top >= 0 && landscapeLayout.execute.bottom <= landscapeLayout.height && landscapeLayout.execute.hit, 'landscape execute preview is reachable and unobscured');
+    assert.ok(landscapeLayout.execute.text.length > 8, 'landscape execute preview names the action');
     await portrait.page.screenshot({ path: path.join(artifacts, 'battle-flow-mobile-landscape.png') });
     record(portrait, 'mobile-battle-layout', { result: 'portrait-and-landscape-reachable', portrait: portraitLayout, landscape: landscapeLayout });
     console.log('scenario mobile layout done');

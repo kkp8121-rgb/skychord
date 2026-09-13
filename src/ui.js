@@ -87,8 +87,11 @@ export class SkyUI {
     $('#battle-round', this.root).textContent = `ROUND ${battle.round || 1}`;
     $('#battle-preview', this.root).textContent = preview;
     $('#battle-resonance', this.root).textContent = `${Math.max(0, Math.floor(battle.resonance || 0))}%`;
-    const intent = battle.enemies?.find((item) => item.hp > 0)?.intent;
-    $('#enemy-intent', this.root).textContent = intent ? `예고 · ${intent.name || intent.type || '공격'} ${intent.power ? `· ${intent.power}` : ''}` : '적의 움직임이 멎었습니다.';
+    const intentEnemy = battle.enemies?.[selectedTarget]?.hp > 0 ? battle.enemies[selectedTarget] : battle.enemies?.find((item) => item.hp > 0);
+    const intent = intentEnemy?.intent;
+    const pendingHeroes = (battle.heroes || []).filter((item) => item.hp > 0 && !item.used).length;
+    const turnOrder = pendingHeroes ? `동료 행동 ${pendingHeroes}회 후 적 차례` : '곧 적 차례';
+    $('#enemy-intent', this.root).textContent = intent ? `선택 대상 ${intentEnemy.name} · 예고 ${intent.name || intent.type || '공격'} ${intent.power ? `· ${intent.power}` : ''} · ${turnOrder}` : `적의 움직임이 멎었습니다. · ${turnOrder}`;
     $('#battle-log', this.root).innerHTML = (battle.log || []).slice(-5).map((line) => `<li>${esc(typeof line === 'string' ? line : line.text || line.message || '')}</li>`).join('');
     $('#battle-enemies', this.root).innerHTML = (battle.enemies || []).map((item, i) => {
       const maxHp = Math.max(1, Number(item.maxHp) || 1), hp = Math.max(0, Number(item.hp) || 0), ratio = Math.max(0, Math.min(100, hp / maxHp * 100));
@@ -115,7 +118,18 @@ export class SkyUI {
     const encore = $('#encore-button', this.root);
     if (encore) { encore.disabled = locked || Number(battle.resonance || 0) < 100; encore.textContent = `F 앙코르 · ${Math.floor(battle.resonance || 0)}%`; }
     const execute = $('#execute-button', this.root);
-    if (execute) { execute.textContent = `SPACE  ${hero.name} 실행`; execute.disabled = locked || !battle.phase || battle.phase !== 'command' || !!battle.heroes?.[selectedHero]?.used; }
+    if (execute) {
+      const selectedTargetName = enemy?.name || '선택 대상';
+      let targetLabel = selectedTargetName;
+      if (selected?.kind === 'attackAll') targetLabel = '전체 적';
+      else if (selected?.kind === 'healAll' || selected?.kind === 'shield') targetLabel = '전체 동료';
+      else if (selected?.kind === 'heal') {
+        const recipient = battle.heroes?.filter((item) => item.hp > 0).sort((a, b) => a.hp / a.maxHp - b.hp / b.maxHp)[0];
+        targetLabel = `자동 회복 · ${recipient?.name || '동료'}`;
+      }
+      execute.textContent = `SPACE · ${hero.name}의 ${selected?.name || '행동'} → ${targetLabel}`;
+      execute.disabled = locked || !battle.phase || battle.phase !== 'command' || !!battle.heroes?.[selectedHero]?.used;
+    }
     this.show('battle');
   }
 

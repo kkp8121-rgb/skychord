@@ -128,6 +128,7 @@ h2, h3, .dialogue-card h2, .enemy-card span, .hero-copy b, .explore-hud h2, .bat
 @media (max-width: 600px) { .dialogue-portrait { width: 76px; height: 98px; } .party-grid .journal-hero { display: grid; grid-template-columns: 90px 1fr; gap: 12px; } .party-grid .journal-hero .portrait { width: 90px; height: 124px; margin-bottom: 0; } .party-grid .journal-hero h3 { font-size: 18px; } .party-grid .journal-hero p { font-size: 12px; } .nearby { bottom: 100px; } .toast { bottom: 132px; } }
 @media (max-width: 900px) and (orientation: landscape) { .battle-screen { padding: 12px 18px; overflow-y: auto; } .battle-layout { gap: 12px; margin-top: 10px; } .battle-header h2 { font-size: 25px; } .enemy-card { min-width: 125px; padding: 8px; } .hero-card { min-width: 105px; } .skill-card { min-height: 54px; padding: 7px; } .battle-log, .battle-controls { display: none; } }
 @media (pointer: coarse), (hover: none) {
+  .battle-controls { display: none; }
   .app-shell:not([data-screen="explore"]) .touch-bar { display: none; }
   .app-shell[data-screen="explore"] .touch-bar { display: grid; grid-template-columns: repeat(6, minmax(38px, 1fr)); gap: 5px; width: auto; left: 8px; right: 8px; }
   .app-shell[data-screen="explore"] .objective-card { bottom: 150px; }
